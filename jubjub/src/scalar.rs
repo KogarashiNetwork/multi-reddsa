@@ -78,4 +78,23 @@ impl Scalar {
     pub(crate) fn to_nafs(self) -> Nafs {
         to_nafs(self.to_raw())
     }
+
+    pub fn from_bytes_wide(bytes: &[u8; 64]) -> Self {
+        Self(from_u512(
+            [
+                u64::from_le_bytes(<[u8; 8]>::try_from(&bytes[0..8]).unwrap()),
+                u64::from_le_bytes(<[u8; 8]>::try_from(&bytes[8..16]).unwrap()),
+                u64::from_le_bytes(<[u8; 8]>::try_from(&bytes[16..24]).unwrap()),
+                u64::from_le_bytes(<[u8; 8]>::try_from(&bytes[24..32]).unwrap()),
+                u64::from_le_bytes(<[u8; 8]>::try_from(&bytes[32..40]).unwrap()),
+                u64::from_le_bytes(<[u8; 8]>::try_from(&bytes[40..48]).unwrap()),
+                u64::from_le_bytes(<[u8; 8]>::try_from(&bytes[48..56]).unwrap()),
+                u64::from_le_bytes(<[u8; 8]>::try_from(&bytes[56..64]).unwrap()),
+            ],
+            R2,
+            R3,
+            MODULUS,
+            INV,
+        ))
+    }
 }
