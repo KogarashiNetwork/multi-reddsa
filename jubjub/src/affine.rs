@@ -63,6 +63,14 @@ impl Affine {
             z: Base::one(),
         }
     }
+
+    pub fn to_bytes(self) -> [u8; 32] {
+        let mut tmp = self.y.to_bytes();
+        let x = self.x.to_bytes();
+        tmp[31] |= x[0] << 7;
+
+        tmp
+    }
 }
 
 impl Add<Extended> for Affine {

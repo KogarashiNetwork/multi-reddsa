@@ -1,7 +1,7 @@
 //! Jubjub base field
 use core::ops::{Add, Mul, Neg, Sub};
 
-use crate::limbs::{add, double, mul, neg, square, sub};
+use crate::limbs::{add, double, invert, little_fermat, mont, mul, neg, square, sub};
 
 const MODULUS: [u64; 4] = [
     0xffffffff00000001,
@@ -38,6 +38,15 @@ impl Base {
         Self(mul(raw, R2, MODULUS, INV))
     }
 
+    // map montomery form limbs to raw
+    pub(crate) const fn to_raw(self) -> [u64; 4] {
+        mont(
+            [self.0[0], self.0[1], self.0[2], self.0[3], 0, 0, 0, 0],
+            MODULUS,
+            INV,
+        )
+    }
+
     pub(crate) fn zero() -> Self {
         Self([0; 4])
     }
@@ -52,6 +61,25 @@ impl Base {
 
     pub(crate) fn square(self) -> Self {
         Self(square(self.0, MODULUS, INV))
+    }
+
+    pub(crate) fn invert(self) -> Option<Self> {
+        match invert(self.0, little_fermat(MODULUS), R, MODULUS, INV) {
+            Some(x) => Some(Self(x)),
+            None => None,
+        }
+    }
+
+    pub fn to_bytes(self) -> [u8; 32] {
+        let tmp = self.to_raw();
+        let mut res = [0; 32];
+
+        res[0..8].copy_from_slice(&tmp[0].to_le_bytes());
+        res[8..16].copy_from_slice(&tmp[1].to_le_bytes());
+        res[16..24].copy_from_slice(&tmp[2].to_le_bytes());
+        res[24..32].copy_from_slice(&tmp[3].to_le_bytes());
+
+        res
     }
 }
 

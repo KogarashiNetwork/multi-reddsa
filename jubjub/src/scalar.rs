@@ -79,6 +79,18 @@ impl Scalar {
         to_nafs(self.to_raw())
     }
 
+    pub fn to_bytes(self) -> [u8; 32] {
+        let tmp = self.to_raw();
+        let mut res = [0; 32];
+
+        res[0..8].copy_from_slice(&tmp[0].to_le_bytes());
+        res[8..16].copy_from_slice(&tmp[1].to_le_bytes());
+        res[16..24].copy_from_slice(&tmp[2].to_le_bytes());
+        res[24..32].copy_from_slice(&tmp[3].to_le_bytes());
+
+        res
+    }
+
     pub fn from_bytes_wide(bytes: &[u8; 64]) -> Self {
         Self(from_u512(
             [
@@ -96,5 +108,21 @@ impl Scalar {
             MODULUS,
             INV,
         ))
+    }
+}
+
+impl Sub for Scalar {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self {
+        Self(sub(self.0, rhs.0, MODULUS))
+    }
+}
+
+impl Mul<Self> for Scalar {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self {
+        Self(mul(self.0, rhs.0, MODULUS, INV))
     }
 }

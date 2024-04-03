@@ -27,6 +27,14 @@ impl Extended {
             z: Base::one(),
         }
     }
+
+    pub fn to_affine(self) -> Affine {
+        let z_inv = self.z.invert().unwrap();
+        Affine {
+            x: self.x * z_inv,
+            y: self.y * z_inv,
+        }
+    }
 }
 
 impl Add<Extended> for Extended {
