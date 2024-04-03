@@ -1,5 +1,7 @@
 //! Jubjub base field
-use crate::limbs::mul;
+use core::ops::{Add, Mul, Neg, Sub};
+
+use crate::limbs::{add, mul, neg, sub};
 
 const MODULUS: [u64; 4] = [
     0xffffffff00000001,
@@ -60,12 +62,48 @@ pub const ROOT_OF_UNITY: [u64; 4] = [
 pub const TWO_ADACITY: u32 = 32;
 
 // Bls scalar and Jubjub base field
-#[derive(Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 pub(crate) struct Base(pub [u64; 4]);
 
 impl Base {
     // map raw limbs to montgomery form
     pub(crate) const fn to_mont(raw: [u64; 4]) -> Self {
         Self(mul(raw, R2, MODULUS, INV))
+    }
+
+    pub(crate) fn one() -> Self {
+        Self(R)
+    }
+}
+
+impl Add for Base {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self {
+        Self(add(self.0, rhs.0, MODULUS))
+    }
+}
+
+impl Neg for Base {
+    type Output = Self;
+
+    fn neg(self) -> Self {
+        Self(neg(self.0, MODULUS))
+    }
+}
+
+impl Sub for Base {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self {
+        Self(sub(self.0, rhs.0, MODULUS))
+    }
+}
+
+impl Mul<Self> for Base {
+    type Output = Self;
+
+    fn mul(self, rhs: Self) -> Self {
+        Self(mul(self.0, rhs.0, MODULUS, INV))
     }
 }

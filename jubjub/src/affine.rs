@@ -1,8 +1,8 @@
 //! Jubjub affine point
 use crate::base::Base;
 
-// Jubjub D params
-pub(crate) const D_PARAM: Base = Base::to_mont([
+// Jubjub D param
+pub(crate) const D: Base = Base::to_mont([
     0x01065fd6d6343eb1,
     0x292d7f6d37579d26,
     0xf5fd9207e6bd7fd4,
@@ -31,8 +31,8 @@ const T: Base = Base::to_mont([
 ]);
 
 /// Jubjub affine coordinate
-#[derive(Clone, Debug)]
-pub struct JubjubAffine {
-    x: Base,
-    y: Base,
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct JubjubAffine {
+    pub(crate) x: Base,
+    pub(crate) y: Base,
 }

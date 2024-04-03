@@ -1,5 +1,7 @@
 mod affine;
 mod base;
+mod coordinate;
+mod extend;
 mod limbs;
 
 pub fn add(left: usize, right: usize) -> usize {
