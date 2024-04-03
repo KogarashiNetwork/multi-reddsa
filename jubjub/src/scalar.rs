@@ -2,7 +2,7 @@
 use core::ops::{Add, Mul, Neg, Sub};
 use rand_core::RngCore;
 
-use crate::limbs::{add, from_u512, mul, neg, sub};
+use crate::limbs::{add, from_u512, mont, mul, neg, sub, to_nafs, Nafs};
 
 const MODULUS: [u64; 4] = [
     0xd0970e5ed6f72cb7,
@@ -42,6 +42,20 @@ const INV: u64 = 0xfffffffeffffffff;
 pub struct Scalar(pub [u64; 4]);
 
 impl Scalar {
+    // map raw limbs to montgomery form
+    pub(crate) const fn to_mont(raw: [u64; 4]) -> Self {
+        Self(mul(raw, R2, MODULUS, INV))
+    }
+
+    // map montomery form limbs to raw
+    pub(crate) const fn to_raw(self) -> [u64; 4] {
+        mont(
+            [self.0[0], self.0[1], self.0[2], self.0[3], 0, 0, 0, 0],
+            MODULUS,
+            INV,
+        )
+    }
+
     pub fn random(mut rand: impl RngCore) -> Self {
         Self(from_u512(
             [
@@ -59,5 +73,9 @@ impl Scalar {
             MODULUS,
             INV,
         ))
+    }
+
+    pub(crate) fn to_nafs(self) -> Nafs {
+        to_nafs(self.to_raw())
     }
 }

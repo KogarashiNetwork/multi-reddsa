@@ -1,7 +1,7 @@
 //! Jubjub base field
 use core::ops::{Add, Mul, Neg, Sub};
 
-use crate::limbs::{add, mul, neg, sub};
+use crate::limbs::{add, double, mul, neg, square, sub};
 
 const MODULUS: [u64; 4] = [
     0xffffffff00000001,
@@ -38,8 +38,20 @@ impl Base {
         Self(mul(raw, R2, MODULUS, INV))
     }
 
+    pub(crate) fn zero() -> Self {
+        Self([0; 4])
+    }
+
     pub(crate) fn one() -> Self {
         Self(R)
+    }
+
+    pub(crate) fn double(self) -> Self {
+        Self(double(self.0, MODULUS))
+    }
+
+    pub(crate) fn square(self) -> Self {
+        Self(square(self.0, MODULUS, INV))
     }
 }
 
