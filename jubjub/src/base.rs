@@ -1,27 +1,13 @@
 //! Jubjub base field
 use core::ops::{Add, Mul, Neg, Sub};
 
-use crate::limbs::{add, mul, neg, sub};
+use crate::limbs::{add, double, invert, little_fermat, mont, mul, neg, square, sub};
 
 const MODULUS: [u64; 4] = [
     0xffffffff00000001,
     0x53bda402fffe5bfe,
     0x3339d80809a1d805,
     0x73eda753299d7d48,
-];
-
-const GENERATOR: [u64; 4] = [
-    0x0000000efffffff1,
-    0x17e363d300189c0f,
-    0xff9c57876f8457b0,
-    0x351332208fc5a8c4,
-];
-
-pub const MULTIPLICATIVE_GENERATOR: [u64; 4] = [
-    0x0000000efffffff1,
-    0x17e363d300189c0f,
-    0xff9c57876f8457b0,
-    0x351332208fc5a8c4,
 ];
 
 /// R = 2^256 mod r
@@ -40,26 +26,7 @@ const R2: [u64; 4] = [
     0x0748d9d99f59ff11,
 ];
 
-/// R^3 = 2^768 mod r
-const R3: [u64; 4] = [
-    0xc62c1807439b73af,
-    0x1b3e0d188cf06990,
-    0x73d13c71c7b5f418,
-    0x6e2a5bb9c8db33e9,
-];
-
-pub const INV: u64 = 0xfffffffeffffffff;
-
-const S: usize = 32;
-
-pub const ROOT_OF_UNITY: [u64; 4] = [
-    0xb9b58d8c5f0e466a,
-    0x5b1b4c801819d7ec,
-    0x0af53ae352a31e64,
-    0x5bf3adda19e9b27b,
-];
-
-pub const TWO_ADACITY: u32 = 32;
+const INV: u64 = 0xfffffffeffffffff;
 
 // Bls scalar and Jubjub base field
 #[derive(Clone, Copy, Debug)]
@@ -71,8 +38,48 @@ impl Base {
         Self(mul(raw, R2, MODULUS, INV))
     }
 
+    // map montomery form limbs to raw
+    pub(crate) const fn to_raw(self) -> [u64; 4] {
+        mont(
+            [self.0[0], self.0[1], self.0[2], self.0[3], 0, 0, 0, 0],
+            MODULUS,
+            INV,
+        )
+    }
+
+    pub(crate) fn zero() -> Self {
+        Self([0; 4])
+    }
+
     pub(crate) fn one() -> Self {
         Self(R)
+    }
+
+    pub(crate) fn double(self) -> Self {
+        Self(double(self.0, MODULUS))
+    }
+
+    pub(crate) fn square(self) -> Self {
+        Self(square(self.0, MODULUS, INV))
+    }
+
+    pub(crate) fn invert(self) -> Option<Self> {
+        match invert(self.0, little_fermat(MODULUS), R, MODULUS, INV) {
+            Some(x) => Some(Self(x)),
+            None => None,
+        }
+    }
+
+    pub fn to_bytes(self) -> [u8; 32] {
+        let tmp = self.to_raw();
+        let mut res = [0; 32];
+
+        res[0..8].copy_from_slice(&tmp[0].to_le_bytes());
+        res[8..16].copy_from_slice(&tmp[1].to_le_bytes());
+        res[16..24].copy_from_slice(&tmp[2].to_le_bytes());
+        res[24..32].copy_from_slice(&tmp[3].to_le_bytes());
+
+        res
     }
 }
 

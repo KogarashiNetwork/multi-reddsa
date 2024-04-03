@@ -1,7 +1,9 @@
 [package]
-name = "jubjub"
+name = "schnorr"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+blake2b_simd = { version = "1", default-features = false }
 rand_core = { version = "0.6.4", default-features = false }
+jubjub = { path = "../jubjub" }
