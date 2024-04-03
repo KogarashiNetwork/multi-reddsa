@@ -4,7 +4,7 @@ use crate::signature::Signature;
 use jubjub::affine::Affine;
 use jubjub::scalar::Scalar;
 
-pub(crate) struct PublicKey(Affine);
+pub(crate) struct PublicKey(pub(crate) Affine);
 
 impl PublicKey {
     pub(crate) fn verify(self, m: &[u8], sig: Signature) -> bool {

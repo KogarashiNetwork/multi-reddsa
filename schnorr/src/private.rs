@@ -1,10 +1,12 @@
 use crate::hash::SchnorrHash;
+use crate::public::PublicKey;
 use crate::signature::Signature;
 
 use jubjub::affine::Affine;
 use jubjub::scalar::Scalar;
 use rand_core::RngCore;
 
+#[derive(Clone, Copy, Debug)]
 pub(crate) struct PrivateKey(Scalar);
 
 impl PrivateKey {
@@ -12,7 +14,12 @@ impl PrivateKey {
         Self(value)
     }
 
-    pub(crate) fn sign(&self, m: &[u8], mut rand: impl RngCore) -> Signature {
+    pub(crate) fn to_public_key(self) -> PublicKey {
+        let value = Affine::generator() * self.0;
+        PublicKey(value.to_affine())
+    }
+
+    pub(crate) fn sign(&self, m: &[u8], rand: impl RngCore) -> Signature {
         // chose random
         let k = Scalar::random(rand);
         let r = Affine::generator() * k;
