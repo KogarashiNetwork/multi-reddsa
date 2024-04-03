@@ -1,8 +1,8 @@
 use jubjub::scalar::Scalar;
 
 pub(crate) struct Signature {
-    s: [u8; 32],
-    e: [u8; 32],
+    pub(crate) s: [u8; 32],
+    pub(crate) e: [u8; 32],
 }
 
 impl Signature {

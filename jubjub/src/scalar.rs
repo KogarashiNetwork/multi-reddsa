@@ -3,6 +3,7 @@ use core::ops::{Add, Mul, Neg, Sub};
 use rand_core::RngCore;
 
 use crate::limbs::{add, from_u512, mont, mul, neg, sub, to_nafs, Nafs};
+use crate::math::sbb;
 
 const MODULUS: [u64; 4] = [
     0xd0970e5ed6f72cb7,
@@ -38,7 +39,7 @@ const R3: [u64; 4] = [
 const INV: u64 = 0xfffffffeffffffff;
 
 // Jubjub scalar field
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Scalar(pub [u64; 4]);
 
 impl Scalar {
@@ -89,6 +90,24 @@ impl Scalar {
         res[24..32].copy_from_slice(&tmp[3].to_le_bytes());
 
         res
+    }
+
+    pub fn from_bytes(bytes: [u8; 32]) -> Option<Self> {
+        let l0 = u64::from_le_bytes(bytes[0..8].try_into().unwrap());
+        let l1 = u64::from_le_bytes(bytes[8..16].try_into().unwrap());
+        let l2 = u64::from_le_bytes(bytes[16..24].try_into().unwrap());
+        let l3 = u64::from_le_bytes(bytes[24..32].try_into().unwrap());
+
+        let (_, borrow) = sbb(l0, MODULUS[0], 0);
+        let (_, borrow) = sbb(l1, MODULUS[1], borrow);
+        let (_, borrow) = sbb(l2, MODULUS[2], borrow);
+        let (_, borrow) = sbb(l3, MODULUS[3], borrow);
+
+        if borrow & 1 == 1 {
+            Some(Self([l0, l1, l2, l3]) * Self(R2))
+        } else {
+            None
+        }
     }
 
     pub fn from_bytes_wide(bytes: &[u8; 64]) -> Self {
