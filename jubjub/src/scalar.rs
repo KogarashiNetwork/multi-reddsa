@@ -1,7 +1,8 @@
 //! Jubjub scalar field
 use core::ops::{Add, Mul, Neg, Sub};
+use rand_core::RngCore;
 
-use crate::limbs::{add, mul, neg, sub};
+use crate::limbs::{add, from_u512, mul, neg, sub};
 
 const MODULUS: [u64; 4] = [
     0xd0970e5ed6f72cb7,
@@ -26,8 +27,37 @@ const R2: [u64; 4] = [
     0x04f6547b8d127688,
 ];
 
+/// R^3 = 2^768 mod r
+const R3: [u64; 4] = [
+    0xe0d6c6563d830544,
+    0x323e3883598d0f85,
+    0xf0fea3004c2e2ba8,
+    0x05874f84946737ec,
+];
+
 const INV: u64 = 0xfffffffeffffffff;
 
 // Jubjub scalar field
 #[derive(Clone, Copy, Debug)]
 pub struct Scalar(pub [u64; 4]);
+
+impl Scalar {
+    pub fn random(mut rand: impl RngCore) -> Self {
+        Self(from_u512(
+            [
+                rand.next_u64(),
+                rand.next_u64(),
+                rand.next_u64(),
+                rand.next_u64(),
+                rand.next_u64(),
+                rand.next_u64(),
+                rand.next_u64(),
+                rand.next_u64(),
+            ],
+            R2,
+            R3,
+            MODULUS,
+            INV,
+        ))
+    }
+}

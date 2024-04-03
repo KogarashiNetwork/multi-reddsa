@@ -1,11 +1,11 @@
 //! Twisted Edwards coordinate operation
-use crate::affine::{JubjubAffine, D};
+use crate::affine::{Affine, D};
 use crate::base::Base;
-use crate::extend::JubjubExtended;
+use crate::extend::Extended;
 
 /// 9M + 4A + 2B
 #[inline(always)]
-pub(crate) fn add_affine_point(lhs: JubjubAffine, rhs: JubjubAffine) -> JubjubExtended {
+pub(crate) fn add_affine_point(lhs: Affine, rhs: Affine) -> Extended {
     let (x0, y0) = (lhs.x, lhs.y);
     let (x1, y1) = (rhs.x, rhs.y);
 
@@ -22,5 +22,5 @@ pub(crate) fn add_affine_point(lhs: JubjubAffine, rhs: JubjubAffine) -> JubjubEx
     let t = e * h;
     let z = f * g;
 
-    JubjubExtended::new(x, y, t, z)
+    Extended::new(x, y, t, z)
 }

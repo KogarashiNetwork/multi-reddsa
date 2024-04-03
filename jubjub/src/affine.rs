@@ -32,7 +32,13 @@ const T: Base = Base::to_mont([
 
 /// Jubjub affine coordinate
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct JubjubAffine {
+pub struct Affine {
     pub(crate) x: Base,
     pub(crate) y: Base,
+}
+
+impl Affine {
+    pub const fn generator() -> Self {
+        Self { x: X, y: Y }
+    }
 }

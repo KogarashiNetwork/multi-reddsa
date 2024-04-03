@@ -1,6 +1,6 @@
 #![no_std]
 
-mod affine;
+pub mod affine;
 mod base;
 mod coordinate;
 mod extend;

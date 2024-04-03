@@ -177,3 +177,15 @@ pub(crate) const fn mont(a: [u64; 8], p: [u64; 4], inv: u64) -> [u64; 4] {
 
     [l0, l1, l2, l3]
 }
+
+pub(crate) const fn from_u512(
+    limbs: [u64; 8],
+    r2: [u64; 4],
+    r3: [u64; 4],
+    p: [u64; 4],
+    inv: u64,
+) -> [u64; 4] {
+    let a = mul([limbs[0], limbs[1], limbs[2], limbs[3]], r2, p, inv);
+    let b = mul([limbs[4], limbs[5], limbs[6], limbs[7]], r3, p, inv);
+    add(a, b, p)
+}
