@@ -1,4 +1,5 @@
 //! Jubjub base field
+use crate::limbs::mul;
 
 const MODULUS: [u64; 4] = [
     0xffffffff00000001,
@@ -59,4 +60,12 @@ pub const ROOT_OF_UNITY: [u64; 4] = [
 pub const TWO_ADACITY: u32 = 32;
 
 // Bls scalar and Jubjub base field
-pub struct Base(pub [u64; 4]);
+#[derive(Clone, Debug)]
+pub(crate) struct Base(pub [u64; 4]);
+
+impl Base {
+    // map raw limbs to montgomery form
+    pub(crate) const fn to_mont(raw: [u64; 4]) -> Self {
+        Self(mul(raw, R2, MODULUS, INV))
+    }
+}
