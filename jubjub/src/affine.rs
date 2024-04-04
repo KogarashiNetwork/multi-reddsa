@@ -2,7 +2,7 @@
 use core::ops::{Add, Mul, Neg};
 
 use crate::base::Base;
-use crate::coordinate::{add_mixed_point, double_projective_point};
+use crate::coordinate::{add_mixed_point, double_affine_point, double_projective_point};
 use crate::extend::Extended;
 use crate::limbs::Naf;
 use crate::scalar::Scalar;
@@ -37,7 +37,7 @@ const T: Base = Base::to_mont([
 ]);
 
 /// Jubjub affine coordinate
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Affine {
     pub(crate) x: Base,
     pub(crate) y: Base,
@@ -70,6 +70,10 @@ impl Affine {
         tmp[31] |= x[0] << 7;
 
         tmp
+    }
+
+    pub fn double(self) -> Extended {
+        double_affine_point(self)
     }
 }
 
@@ -105,6 +109,48 @@ impl Neg for Affine {
         Self {
             x: -self.x,
             y: self.y,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use proptest::{collection::vec, prelude::*};
+
+    prop_compose! {
+        fn arb_field()(
+            bytes in vec(any::<u8>(), 64)
+        ) -> Scalar {
+            Scalar::from_bytes_wide(&<[u8; 64]>::try_from(bytes).unwrap())
+        }
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+        #[test]
+        fn test_add_and_double(a in arb_field(), b in arb_field()) {
+            let a_point = Affine::generator() * a;
+            let b_point = Affine::generator() * b;
+
+            let additive = a_point + a_point + b_point + b_point;
+            let doubling = a_point.double() + b_point.double();
+
+            assert_eq!(additive.to_affine(), doubling.to_affine())
+        }
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+        #[test]
+        fn test_scalar(r in arb_field()) {
+            let nine = Scalar::one().double().double().double() + Scalar::one();
+            let r_point = Affine::generator() * r;
+
+            let scalar = r_point * nine;
+            let naive = r_point.double().double().double() + r_point;
+
+            assert_eq!(scalar.to_affine(), naive.to_affine())
         }
     }
 }

@@ -27,6 +27,27 @@ pub(crate) fn add_affine_point(lhs: Affine, rhs: Affine) -> Extended {
     Extended::new(x, y, t, z)
 }
 
+/// 3M + 4S + 1D + 2B + 2A
+#[inline(always)]
+pub fn double_affine_point(lhs: Affine) -> Extended {
+    let (x, y) = (lhs.x, lhs.y);
+
+    let a = x.square();
+    let b = y.square();
+    let c = D * a * b;
+    let h = a + b;
+    let e = (x + y).square() - h;
+    let f = Base::one() - c;
+    let g = Base::one() + c;
+
+    let x = e * f;
+    let y = g * h;
+    let t = e * h;
+    let z = f * g;
+
+    Extended::new(x, y, t, z)
+}
+
 /// 5M + 3S + 2D + 2B + 1A
 #[inline(always)]
 pub fn double_projective_point(extended: Extended) -> Extended {

@@ -29,7 +29,7 @@ const R2: [u64; 4] = [
 const INV: u64 = 0xfffffffeffffffff;
 
 // Bls scalar and Jubjub base field
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) struct Base(pub [u64; 4]);
 
 impl Base {
