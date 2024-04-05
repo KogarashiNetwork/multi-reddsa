@@ -1,1 +1,1 @@
-# Multi Signature RedDSA
+# MuSig with RedDSA
