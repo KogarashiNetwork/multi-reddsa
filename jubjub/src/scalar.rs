@@ -3,7 +3,7 @@ use core::fmt::{Debug, Formatter, Result};
 use core::ops::{Add, Mul, Neg, Sub};
 use rand_core::RngCore;
 
-use crate::limbs::{add, double, from_u512, mont, mul, square, sub, to_mont_form, to_nafs, Nafs};
+use crate::limbs::{add, double, from_u512, mont, mul, square, sub, to_nafs, Nafs};
 use crate::math::sbb;
 
 const MODULUS: [u64; 4] = [
@@ -58,7 +58,7 @@ impl Scalar {
 
     // map raw limbs to montgomery form
     pub(crate) const fn to_mont(raw: [u64; 4]) -> Self {
-        Self(to_mont_form(raw, R2, MODULUS, INV))
+        Self(mul(raw, R2, MODULUS, INV))
     }
 
     // map montomery form limbs to raw
