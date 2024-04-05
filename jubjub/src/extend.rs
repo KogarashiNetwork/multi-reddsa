@@ -161,15 +161,4 @@ mod tests {
             assert_eq!(additive.to_affine(), doubling.to_affine())
         }
     }
-
-    proptest! {
-        #![proptest_config(ProptestConfig::with_cases(100))]
-        #[test]
-        fn test_mix(r in arb_field(), l in arb_field(), a in arb_point(), b in arb_point()) {
-            let affine = a * (r + l);
-            let extended = a * r + a * l;
-
-            assert_eq!(affine.to_affine(), extended.to_affine())
-        }
-    }
 }

@@ -23,7 +23,7 @@ mod tests {
     proptest! {
         #![proptest_config(ProptestConfig::with_cases(100))]
         #[test]
-        fn schnorr_signature_test(value in arb_field()) {
+        fn test_schnorr_signature(value in arb_field()) {
             let message = b"test";
             let private_key = PrivateKey::new(value);
             let public_key = private_key.to_public_key();
