@@ -1,8 +1,9 @@
 //! Jubjub scalar field
+use core::fmt::{Debug, Formatter, Result};
 use core::ops::{Add, Mul, Neg, Sub};
 use rand_core::RngCore;
 
-use crate::limbs::{add, from_u512, mont, mul, neg, sub, to_nafs, Nafs};
+use crate::limbs::{add, double, from_u512, mont, mul, square, sub, to_mont_form, to_nafs, Nafs};
 use crate::math::sbb;
 
 const MODULUS: [u64; 4] = [
@@ -14,10 +15,10 @@ const MODULUS: [u64; 4] = [
 
 /// R = 2^256 mod r
 const R: [u64; 4] = [
-    0x00000001fffffffe,
-    0x5884b7fa00034802,
-    0x998c4fefecbc4ff5,
-    0x1824b159acc5056f,
+    0x25f80bb3b99607d9,
+    0xf315d62f66b6e750,
+    0x932514eeeb8814f4,
+    0x09a6fc6f479155c6,
 ];
 
 /// R^2 = 2^512 mod r
@@ -36,16 +37,28 @@ const R3: [u64; 4] = [
     0x05874f84946737ec,
 ];
 
-const INV: u64 = 0xfffffffeffffffff;
+const INV: u64 = 0x1ba3a358ef788ef9;
 
 // Jubjub scalar field
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Scalar(pub [u64; 4]);
 
 impl Scalar {
+    pub(crate) fn one() -> Self {
+        Self(R)
+    }
+
+    pub(crate) fn double(self) -> Self {
+        Self(double(self.0, MODULUS))
+    }
+
+    pub(crate) fn square(self) -> Self {
+        Self(square(self.0, MODULUS, INV))
+    }
+
     // map raw limbs to montgomery form
     pub(crate) const fn to_mont(raw: [u64; 4]) -> Self {
-        Self(mul(raw, R2, MODULUS, INV))
+        Self(to_mont_form(raw, R2, MODULUS, INV))
     }
 
     // map montomery form limbs to raw
@@ -130,6 +143,14 @@ impl Scalar {
     }
 }
 
+impl Add for Scalar {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self {
+        Self(add(self.0, rhs.0, MODULUS))
+    }
+}
+
 impl Sub for Scalar {
     type Output = Self;
 
@@ -143,5 +164,64 @@ impl Mul<Self> for Scalar {
 
     fn mul(self, rhs: Self) -> Self {
         Self(mul(self.0, rhs.0, MODULUS, INV))
+    }
+}
+
+impl Debug for Scalar {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "0x")?;
+        for limb in self.to_raw().iter().rev() {
+            for byte in limb.to_be_bytes() {
+                write!(f, "{:02x}", byte)?;
+            }
+        }
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use proptest::{collection::vec, prelude::*};
+
+    prop_compose! {
+        fn arb_field()(
+            bytes in vec(any::<u8>(), 64)
+        ) -> Scalar {
+            Scalar::from_bytes_wide(&<[u8; 64]>::try_from(bytes).unwrap())
+        }
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+        #[test]
+        fn test_raw_and_mont(a in arb_field()) {
+            let raw = a.to_raw();
+            let mont = Scalar::to_mont(raw);
+
+            assert_eq!(a, mont)
+        }
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+        #[test]
+        fn test_add_and_double(a in arb_field(), b in arb_field()) {
+            let additive = a + a + b + b;
+            let doubling = a.double() + b.double();
+
+            assert_eq!(additive, doubling)
+        }
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+        #[test]
+        fn test_mul_and_square(a in arb_field(), b in arb_field()) {
+            let additive = a * a + b * b;
+            let doubling = a.square() + b.square();
+
+            assert_eq!(additive, doubling)
+        }
     }
 }

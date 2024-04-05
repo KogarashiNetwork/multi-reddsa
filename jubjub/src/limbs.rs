@@ -265,6 +265,10 @@ pub(crate) const fn from_u512(
     add(a, b, p)
 }
 
+pub(crate) const fn to_mont_form(val: [u64; 4], r2: [u64; 4], p: [u64; 4], inv: u64) -> [u64; 4] {
+    mul(val, r2, p, inv)
+}
+
 pub type Bits = Vec<u8>;
 
 #[inline(always)]

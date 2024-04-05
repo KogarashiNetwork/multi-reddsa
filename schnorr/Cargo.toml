@@ -7,3 +7,12 @@ edition = "2021"
 blake2b_simd = { version = "1", default-features = false }
 rand_core = { version = "0.6.4", default-features = false }
 jubjub = { path = "../jubjub" }
+
+[dev-dependencies]
+proptest = "1"
+
+[features]
+default = ["std"]
+std = [
+    "rand_core/getrandom"
+]
