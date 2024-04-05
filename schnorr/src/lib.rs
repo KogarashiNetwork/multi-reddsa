@@ -7,18 +7,29 @@ pub(crate) mod signature;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rand_core::OsRng;
     use jubjub::scalar::Scalar;
     use private::PrivateKey;
+    use proptest::{collection::vec, prelude::*};
+    use rand_core::OsRng;
 
-    #[test]
-    fn schnorr_signature_test() {
-        let message = b"test";
-        let value = Scalar::random(OsRng);
-        let private_key = PrivateKey::new(value);
-        let public_key = private_key.to_public_key();
-        let signature = private_key.sign(message, OsRng);
+    prop_compose! {
+        fn arb_field()(
+            bytes in vec(any::<u8>(), 64)
+        ) -> Scalar {
+            Scalar::from_bytes_wide(&<[u8; 64]>::try_from(bytes).unwrap())
+        }
+    }
 
-        assert!(public_key.verify(message, signature))
+    proptest! {
+        #![proptest_config(ProptestConfig::with_cases(100))]
+        #[test]
+        fn schnorr_signature_test(value in arb_field()) {
+            let message = b"test";
+            let private_key = PrivateKey::new(value);
+            let public_key = private_key.to_public_key();
+            let signature = private_key.sign(message, OsRng);
+
+            assert!(public_key.verify(message, signature))
+        }
     }
 }
