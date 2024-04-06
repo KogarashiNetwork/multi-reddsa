@@ -30,4 +30,12 @@ impl SchnorrHash {
     pub(crate) fn execute(a: &[u8], b: &[u8]) -> Scalar {
         SchnorrHash::default().update(a).update(b).finalize()
     }
+
+    pub(crate) fn aggregate(a: &[u8], b: &[u8], c: &[u8]) -> Scalar {
+        SchnorrHash::default()
+            .update(a)
+            .update(b)
+            .update(c)
+            .finalize()
+    }
 }

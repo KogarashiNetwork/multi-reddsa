@@ -2,7 +2,9 @@
 use core::ops::{Add, Mul, Neg};
 
 use crate::base::Base;
-use crate::coordinate::{add_mixed_point, double_affine_point, double_projective_point};
+use crate::coordinate::{
+    add_affine_point, add_mixed_point, double_affine_point, double_projective_point,
+};
 use crate::extend::Extended;
 use crate::limbs::Naf;
 use crate::scalar::Scalar;
@@ -74,6 +76,14 @@ impl Affine {
 
     pub fn double(self) -> Extended {
         double_affine_point(self)
+    }
+}
+
+impl Add for Affine {
+    type Output = Extended;
+
+    fn add(self, rhs: Affine) -> Extended {
+        add_affine_point(self, rhs)
     }
 }
 

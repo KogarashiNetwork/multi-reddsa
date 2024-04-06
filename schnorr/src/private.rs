@@ -7,7 +7,7 @@ use jubjub::scalar::Scalar;
 use rand_core::RngCore;
 
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct PrivateKey(Scalar);
+pub(crate) struct PrivateKey(pub(crate) Scalar);
 
 impl PrivateKey {
     pub(crate) fn new(value: Scalar) -> Self {

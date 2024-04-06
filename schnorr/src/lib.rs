@@ -1,4 +1,5 @@
 #![no_std]
+pub(crate) mod aggregation;
 pub(crate) mod hash;
 pub(crate) mod private;
 pub(crate) mod public;

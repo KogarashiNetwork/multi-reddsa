@@ -2,11 +2,16 @@ use crate::hash::SchnorrHash;
 use crate::signature::Signature;
 
 use jubjub::affine::Affine;
+use jubjub::extend::Extended;
 use jubjub::scalar::Scalar;
 
 pub(crate) struct PublicKey(pub(crate) Affine);
 
 impl PublicKey {
+    pub(crate) fn new(value: Extended) -> Self {
+        Self(value.to_affine())
+    }
+
     pub(crate) fn verify(self, m: &[u8], sig: Signature) -> bool {
         let s = Scalar::from_bytes(sig.s).unwrap();
         let e = Scalar::from_bytes(sig.e).unwrap();
