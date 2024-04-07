@@ -1,3 +1,5 @@
+use core::ops::Mul;
+
 use crate::hash::SchnorrHash;
 use crate::public::PublicKey;
 use crate::signature::Signature;
@@ -7,14 +9,14 @@ use jubjub::scalar::Scalar;
 use rand_core::RngCore;
 
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct PrivateKey(Scalar);
+pub struct PrivateKey(pub(crate) Scalar);
 
 impl PrivateKey {
-    pub(crate) fn new(value: Scalar) -> Self {
+    pub fn new(value: Scalar) -> Self {
         Self(value)
     }
 
-    pub(crate) fn to_public_key(self) -> PublicKey {
+    pub fn to_public_key(self) -> PublicKey {
         let value = Affine::basepoint() * self.0;
         PublicKey(value.to_affine())
     }
@@ -27,5 +29,13 @@ impl PrivateKey {
         let s = k - self.0 * e;
 
         Signature::new(s, e)
+    }
+}
+
+impl Mul<Scalar> for PrivateKey {
+    type Output = Scalar;
+
+    fn mul(self, rhs: Scalar) -> Self::Output {
+        self.0 * rhs
     }
 }

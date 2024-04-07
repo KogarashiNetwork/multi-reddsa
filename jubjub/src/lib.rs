@@ -3,7 +3,7 @@ pub mod affine;
 mod base;
 mod cipher;
 mod coordinate;
-mod extend;
+pub mod extend;
 mod limbs;
 mod math;
 pub mod scalar;

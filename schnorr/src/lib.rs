@@ -1,8 +1,8 @@
 #![no_std]
-pub(crate) mod hash;
-pub(crate) mod private;
-pub(crate) mod public;
-pub(crate) mod signature;
+pub mod hash;
+pub mod private;
+pub mod public;
+pub mod signature;
 
 #[cfg(test)]
 mod tests {

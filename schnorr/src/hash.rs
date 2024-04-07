@@ -3,7 +3,7 @@ use jubjub::scalar::Scalar;
 
 const SCHNORR_PERSONAL: &[u8; 16] = b"Schnorr_Sig_Hash";
 
-pub(crate) struct SchnorrHash(State);
+pub struct SchnorrHash(State);
 
 impl Default for SchnorrHash {
     fn default() -> Self {
@@ -27,7 +27,15 @@ impl SchnorrHash {
         Scalar::from_bytes_wide(digest.as_array())
     }
 
-    pub(crate) fn execute(a: &[u8], b: &[u8]) -> Scalar {
+    pub fn execute(a: &[u8], b: &[u8]) -> Scalar {
         SchnorrHash::default().update(a).update(b).finalize()
+    }
+
+    pub fn aggregate(a: &[u8], b: &[u8], c: &[u8]) -> Scalar {
+        SchnorrHash::default()
+            .update(a)
+            .update(b)
+            .update(c)
+            .finalize()
     }
 }
