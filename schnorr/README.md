@@ -17,7 +17,7 @@
 - choose random $k \in \mathbb Z_q$
 - let $r = k * g$
 - let $e = H(r || M)$
-- let $s = k -xe$
+- let $s = k - xe$
 - let $(s, e)$ signature
 
 ## Verify
@@ -25,4 +25,4 @@
 - let $r_v = s * g + e * y$
 - let $e_v = H(r_v || M)$
 
-if $e_v=e$, the signature is valid.
+if $e_v = e$, the signature is valid.

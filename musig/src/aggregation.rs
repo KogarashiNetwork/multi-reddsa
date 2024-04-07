@@ -1,9 +1,9 @@
-use crate::hash::SchnorrHash;
-use crate::private::PrivateKey;
-use crate::public::PublicKey;
-use crate::signature::Signature;
 use jubjub::affine::Affine;
 use jubjub::scalar::Scalar;
+use schnorr::hash::SchnorrHash;
+use schnorr::private::PrivateKey;
+use schnorr::public::PublicKey;
+use schnorr::signature::Signature;
 
 pub(crate) struct PublicParams {
     randomness: Affine,
@@ -14,18 +14,18 @@ pub(crate) struct PublicParams {
 impl PublicParams {
     fn new(m: &[u8], a: PublicKey, b: PublicKey, a_r: Affine, b_r: Affine) -> Self {
         let randomness = (a_r + b_r).to_affine();
-        let public_key = (a.0 + b.0).to_affine();
+        let public_key = a + b;
         let challenge = SchnorrHash::aggregate(&randomness.to_bytes(), &public_key.to_bytes(), m);
 
         Self {
             randomness,
-            public_key: PublicKey(public_key),
+            public_key,
             challenge,
         }
     }
 
     fn cosign(&self, randomness: Scalar, private_key: PrivateKey) -> Scalar {
-        randomness + self.challenge * private_key.0
+        randomness + private_key * self.challenge
     }
 
     fn generate_signature(&self, e_1: Scalar, e_2: Scalar) -> Signature {
@@ -35,9 +35,9 @@ impl PublicParams {
     }
 
     fn verify(&self, m: &[u8], sig: Signature) -> bool {
-        let s = Scalar::from_bytes(sig.s).unwrap();
-        let e = Scalar::from_bytes(sig.e).unwrap();
-        let r_v = Affine::basepoint() * s + self.public_key.0 * e;
+        let s = sig.get_s();
+        let e = sig.get_e();
+        let r_v = Affine::basepoint() * s + self.public_key * e;
         let e_v = SchnorrHash::execute(&r_v.to_affine().to_bytes(), m);
 
         e_v == e
@@ -47,7 +47,6 @@ impl PublicParams {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::private::PrivateKey;
     use proptest::{collection::vec, prelude::*};
 
     prop_compose! {
