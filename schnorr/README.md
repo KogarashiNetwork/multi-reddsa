@@ -1,9 +1,10 @@
 # Schnorr Signature
+Implementation of [Efficient Signature Generation by Smart Cards](https://link.springer.com/article/10.1007/BF00196725)
 
 ## Params
 
 - p: order of scalar field
-- g: basepoint of elliptic curve group
+- g: basepoint of prime order elliptic curve group
 - H: hash function $H: \{0,1\}^* \rightarrow \mathbb Z_q$
 - m: message to be signed
 

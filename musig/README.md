@@ -1,13 +1,13 @@
 # MuSig
 
-## Params
+## Signature Aggregation
+
+### Params
 
 - p: order of scalar field
-- g: basepoint of elliptic curve group
+- g: basepoint of prime order elliptic curve group
 - H: hash function $H: \{0,1\}^* \rightarrow \mathbb Z_q$
 - m: message to be signed
-
-## Signature Aggregation
 
 ### Setup
 
