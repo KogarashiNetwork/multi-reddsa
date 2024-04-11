@@ -3,6 +3,7 @@ use core::fmt::{Debug, Formatter, Result};
 use core::ops::{Add, Mul, Neg, Sub};
 
 use crate::limbs::{add, double, from_u512, invert, little_fermat, mont, mul, neg, square, sub};
+use crate::math::sbb;
 
 const MODULUS: [u64; 4] = [
     0xffffffff00000001,
@@ -36,6 +37,15 @@ const R3: [u64; 4] = [
 ];
 
 const INV: u64 = 0xfffffffeffffffff;
+
+const S: usize = 32;
+
+const ROOT_OF_UNITY: Base = Base([
+    0xb9b58d8c5f0e466a,
+    0x5b1b4c801819d7ec,
+    0x0af53ae352a31e64,
+    0x5bf3adda19e9b27b,
+]);
 
 // Bls scalar and Jubjub base field
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -91,6 +101,24 @@ impl Base {
         res
     }
 
+    pub fn from_bytes(bytes: [u8; 32]) -> Option<Self> {
+        let l0 = u64::from_le_bytes(bytes[0..8].try_into().unwrap());
+        let l1 = u64::from_le_bytes(bytes[8..16].try_into().unwrap());
+        let l2 = u64::from_le_bytes(bytes[16..24].try_into().unwrap());
+        let l3 = u64::from_le_bytes(bytes[24..32].try_into().unwrap());
+
+        let (_, borrow) = sbb(l0, MODULUS[0], 0);
+        let (_, borrow) = sbb(l1, MODULUS[1], borrow);
+        let (_, borrow) = sbb(l2, MODULUS[2], borrow);
+        let (_, borrow) = sbb(l3, MODULUS[3], borrow);
+
+        if borrow & 1 == 1 {
+            Some(Self([l0, l1, l2, l3]) * Self(R2))
+        } else {
+            None
+        }
+    }
+
     pub fn from_bytes_wide(bytes: &[u8; 64]) -> Self {
         Self(from_u512(
             [
@@ -108,6 +136,70 @@ impl Base {
             MODULUS,
             INV,
         ))
+    }
+
+    pub fn pow_vartime(&self, by: &[u64; 4]) -> Self {
+        let mut res = Self::one();
+        for e in by.iter().rev() {
+            for i in (0..64).rev() {
+                res = res.square();
+
+                if ((*e >> i) & 1) == 1 {
+                    res = res * *self;
+                }
+            }
+        }
+        res
+    }
+
+    pub fn is_odd(self) -> bool {
+        let raw = self.to_raw();
+        (raw[0] % 2) != 0
+    }
+
+    pub fn sqrt(&self) -> Option<Self> {
+        let w = self.pow_vartime(&[
+            0x7fff2dff7fffffff,
+            0x04d0ec02a9ded201,
+            0x94cebea4199cec04,
+            0x39f6d3a9,
+        ]);
+
+        let mut v = S;
+        let mut x = w * *self;
+        let mut b = x * w;
+        let mut z = ROOT_OF_UNITY;
+
+        for max_v in (1..=S).rev() {
+            let mut k = 1;
+            let mut b2k = b.square();
+            let mut j_less_than_v = true;
+
+            for j in 2..max_v {
+                j_less_than_v &= j != v;
+                if b2k == Self::one() {
+                    if j_less_than_v {
+                        z = z.square()
+                    };
+                } else {
+                    b2k = b2k.square();
+                    k = j;
+                };
+            }
+
+            if b != Self::one() {
+                x = x * z
+            };
+            z = z.square();
+            b = b * z;
+            v = k;
+        }
+
+        if &x.square() == self {
+            Some(x)
+        } else {
+            None
+        }
     }
 }
 

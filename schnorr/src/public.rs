@@ -10,7 +10,7 @@ use jubjub::scalar::Scalar;
 pub struct PublicKey(pub(crate) Affine);
 
 impl PublicKey {
-    pub(crate) fn new(value: Affine) -> Self {
+    pub fn new(value: Affine) -> Self {
         Self(value)
     }
 

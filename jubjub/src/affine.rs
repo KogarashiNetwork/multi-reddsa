@@ -74,6 +74,36 @@ impl Affine {
         tmp
     }
 
+    pub fn from_bytes(mut bytes: [u8; 32]) -> Option<Self> {
+        let sign = (bytes[31] >> 7) == 1;
+        bytes[31] &= 0b01111111;
+
+        match Base::from_bytes(bytes) {
+            Some(y) => {
+                let y2 = y.square();
+                let y2_p = y2 * D + Base::one();
+                let y2_n = y2 - Base::one();
+                match y2_p.invert() {
+                    Some(y2_p) => {
+                        let y2_n = y2_n * y2_p;
+
+                        match y2_n.sqrt() {
+                            Some(mut x) => {
+                                if x.is_odd() ^ sign {
+                                    x = -x;
+                                }
+                                Some(Self { x, y })
+                            }
+                            None => None,
+                        }
+                    }
+                    None => None,
+                }
+            }
+            None => None,
+        }
+    }
+
     pub fn double(self) -> Extended {
         double_affine_point(self)
     }

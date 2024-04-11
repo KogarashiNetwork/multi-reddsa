@@ -1,6 +1,6 @@
 //! Jubjub scalar field
 use core::fmt::{Debug, Formatter, Result};
-use core::ops::{Add, Mul, Neg, Sub};
+use core::ops::{Add, Mul, Sub};
 use rand_core::RngCore;
 
 use crate::limbs::{add, double, from_u512, mont, mul, square, sub, to_nafs, Nafs};
