@@ -20,7 +20,7 @@ impl PublicParams {
         let randomness = (a_r + b_r).to_affine();
         let a_1 = SchnorrHash::aggregate(&a.to_bytes(), &b.to_bytes(), &a.to_bytes());
         let a_2 = SchnorrHash::aggregate(&a.to_bytes(), &b.to_bytes(), &b.to_bytes());
-        let aggregated_point = Affine::basepoint() * a_1 + Affine::basepoint() * a_2;
+        let aggregated_point = a * a_1 + b * a_2;
         let public_key = PublicKey::new(aggregated_point.to_affine());
         let challenge = SchnorrHash::aggregate(&randomness.to_bytes(), &public_key.to_bytes(), m);
 
@@ -67,19 +67,13 @@ mod tests {
     proptest! {
         #![proptest_config(ProptestConfig::with_cases(100))]
         #[test]
-        fn test_naive_signature_aggregation(alice in arb_field(), bob in arb_field(), r1 in arb_field(), r2 in arb_field()) {
+        fn test_signature_aggregation(alice in arb_field(), bob in arb_field(), r1 in arb_field(), r2 in arb_field()) {
             let message = b"test";
-            // x_1
             let alice_private_key = PrivateKey::new(alice);
-            // X_1
             let alice_public_key = alice_private_key.to_public_key();
-            // R_1
             let alice_public_r = Affine::basepoint() * r1;
-            // x_2
             let bob_private_key = PrivateKey::new(bob);
-            // X_2
             let bob_public_key = bob_private_key.to_public_key();
-            // R_2
             let bob_public_r = Affine::basepoint() * r2;
 
             let a1 = SchnorrHash::aggregate(&alice_public_key.to_bytes(), &bob_public_key.to_bytes(), &alice_public_key.to_bytes());

@@ -41,6 +41,10 @@ impl Extended {
     pub(crate) fn double(self) -> Self {
         double_projective_point(self)
     }
+
+    pub fn to_bytes(self) -> [u8; 32] {
+        self.to_affine().to_bytes()
+    }
 }
 
 impl Add<Extended> for Extended {
